@@ -73,15 +73,20 @@
 let score = 0;
 let combo = 0;
 
-// SPEED 11 🔥 (faster notes)
 const speed = 8;
+const hitWindow = 40; // milliseconds 🎯
 
 function spawnNote(lane) {
   let note = document.createElement("div");
   note.classList.add("note");
+
+  // store exact spawn time ⏱️
+  note.spawnTime = Date.now();
+
   lane.appendChild(note);
 
   let pos = 0;
+
   let fall = setInterval(() => {
     pos += speed;
     note.style.top = pos + "px";
@@ -101,7 +106,7 @@ setInterval(() => {
   spawnNote(lane);
 }, 500);
 
-// TAP CONTROLS 👇
+// TAP 👇
 document.querySelectorAll(".lane").forEach((lane) => {
   lane.addEventListener("touchstart", () => {
     hitLane(lane);
@@ -113,12 +118,18 @@ function hitLane(lane) {
 
   if (notes.length > 0) {
     let note = notes[0];
-    let top = parseInt(note.style.top);
 
-    // HIT WINDOW 🎯
-    let hitLine = lane.clientHeight - 60;
+    let currentTime = Date.now();
 
-    if (top > hitLine - 40 && top < hitLine + 40) {
+    // estimate when note should hit line
+    let travelTime = 60 * (1000 / 50); 
+    // (approx based on speed + interval)
+
+    let expectedHitTime = note.spawnTime + travelTime;
+
+    let diff = Math.abs(currentTime - expectedHitTime);
+
+    if (diff <= hitWindow) {
       score += 100;
       combo++;
       clearInterval(note.dataset.interval);
